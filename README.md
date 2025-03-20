@@ -1,50 +1,78 @@
-# Welcome to your Expo app 👋
+# Teatime Authority App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+An official government-mandated app ensuring all subjects comply with the mandatory daily tea consumption requirement.
 
-## Get started
+*Note: This is a parody application and not affiliated with any actual government.*
 
-1. Install dependencies
+## Description
 
-   ```bash
-   npm install
-   ```
+The Teatime Authority App enforces the fictional "Tea Consumption Act of 2023", which requires all citizens to drink tea at 5 PM daily. Users must submit photographic evidence of their compliance or face penalties.
 
-2. Start the app
+## Features
 
-   ```bash
-    npx expo start
-   ```
+- **User Authentication**: Secure registration and login
+- **Daily Tea Compliance**: Submit photo evidence of tea consumption
+- **Fine Management**: View and pay tea consumption violations
+- **Statistics & Records**: Track your tea consumption history
+- **Charitable Alternatives**: Option to donate instead of paying fines
 
-In the output, you'll find options to open the app in a
+## Getting Started
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Prerequisites
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Node.js (16.x or later)
+- npm or yarn
+- Expo CLI
+- Supabase account for backend services
 
-## Get a fresh project
+### Installation
 
-When you're ready, run:
-
+1. Clone the repository
 ```bash
-npm run reset-project
+git clone https://github.com/yourusername/teatime-authority.git
+cd teatime-authority
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install dependencies
+```bash
+npm install
+```
 
-## Learn more
+3. Set up Supabase
+   - Create a new Supabase project
+   - Set up the database schema as defined in the documentation
+   - Update the Supabase credentials in `services/supabase.ts`
 
-To learn more about developing your project with Expo, look at the following resources:
+4. Start the development server
+```bash
+npx expo start
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Tech Stack
 
-## Join the community
+- **Frontend**: React Native with Expo
+- **UI Components**: React Native Paper
+- **Backend & Auth**: Supabase
+- **Storage**: Supabase Storage
+- **Notifications**: Expo Notifications
 
-Join our community of developers creating universal apps.
+## Project Structure
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- `/app` - Main application screens and navigation
+- `/components` - Reusable UI components
+- `/constants` - Application constants (colors, layout, config)
+- `/services` - API and backend service integrations
+- `/assets` - Static assets like images and fonts
+
+## Contributing
+
+This project is developed as part of a learning exercise. Contributions, ideas, and feedback are welcome.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- This project is a parody and meant for educational purposes only
+- Inspired by British tea culture and humor
