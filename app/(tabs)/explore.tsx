@@ -1,109 +1,129 @@
-import { StyleSheet, Image, Platform } from 'react-native';
+import React from 'react';
+import { StyleSheet, View, ScrollView } from 'react-native';
+import { Text, Card, Divider, Button } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Colors from '../../constants/Colors';
+import Layout from '../../constants/Layout';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+const TEA_TYPES = [
+  {
+    name: 'English Breakfast',
+    description: 'A robust, full-bodied tea with a rich flavor. Perfect for morning tea time.',
+    origin: 'England',
+  },
+  {
+    name: 'Earl Grey',
+    description: 'Black tea infused with bergamot oil, giving it a distinctive citrus flavor.',
+    origin: 'England',
+  },
+  {
+    name: 'Green Tea',
+    description: 'Unoxidized tea with a fresh, grassy flavor. Known for its health benefits.',
+    origin: 'China/Japan',
+  },
+  {
+    name: 'Chamomile',
+    description: 'A herbal infusion with calming properties. Great for evening relaxation.',
+    origin: 'Various',
+  },
+  {
+    name: 'Peppermint',
+    description: 'Refreshing herbal tea with a cool, minty flavor. Aids digestion.',
+    origin: 'Europe',
+  },
+];
 
-export default function TabTwoScreen() {
+export default function ExploreScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Explore Tea Varieties</Text>
+        <Text style={styles.subtitle}>
+          Discover the tea types approved by His Majesty for official tea time
+        </Text>
+        
+        <Divider style={styles.divider} />
+        
+        {TEA_TYPES.map((tea, index) => (
+          <Card key={index} style={styles.card}>
+            <Card.Content>
+              <Text style={styles.teaName}>{tea.name}</Text>
+              <Text style={styles.teaOrigin}>Origin: {tea.origin}</Text>
+              <Text style={styles.teaDescription}>{tea.description}</Text>
+            </Card.Content>
+            <Card.Actions>
+              <Button mode="text" icon="information">Learn More</Button>
+            </Card.Actions>
+          </Card>
+        ))}
+        
+        <View style={styles.infoSection}>
+          <Text style={styles.infoTitle}>Tea Time Regulations</Text>
+          <Text style={styles.infoText}>
+            According to the British Tea Act of 2023, citizens are required to consume tea daily at 5:00 PM.
+            Failure to do so may result in fines or mandatory attendance at tea appreciation classes.
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  scrollContent: {
+    padding: Layout.spacing.m,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginBottom: Layout.spacing.xs,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: Colors.mutedText,
+    marginBottom: Layout.spacing.m,
+  },
+  divider: {
+    marginBottom: Layout.spacing.m,
+  },
+  card: {
+    marginBottom: Layout.spacing.m,
+    backgroundColor: Colors.card,
+  },
+  teaName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    color: Colors.primary,
+  },
+  teaOrigin: {
+    fontSize: 14,
+    color: Colors.mutedText,
+    marginBottom: 8,
+  },
+  teaDescription: {
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  infoSection: {
+    backgroundColor: Colors.primaryTransparent,
+    padding: Layout.spacing.m,
+    borderRadius: Layout.borderRadius.medium,
+    marginVertical: Layout.spacing.l,
+  },
+  infoTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginBottom: Layout.spacing.s,
+  },
+  infoText: {
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

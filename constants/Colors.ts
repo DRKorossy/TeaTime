@@ -26,40 +26,40 @@ export const Colors = {
 };
 
 /**
- * Color constants for the Teatime Authority App
+ * Color constants for the Teatime Authority App - Premium Edition
  */
 
 export default {
-  // Primary British royal colors
-  primary: '#1A2942', // Dark Blue
-  secondary: '#C8102E', // Red
-  accent: '#FCBF49', // Gold
+  // Primary British royal colors - refined for premium look
+  primary: '#0A3563', // Rich Navy Blue
+  secondary: '#B91C1C', // Deep Red
+  accent: '#E9AF2D', // Rich Gold
   
-  // UI colors
-  background: '#F8F9FA',
+  // UI colors - more refined for premium look
+  background: '#F9F9FB', // Subtle off-white
   card: '#FFFFFF',
-  text: '#1A1A1A',
-  border: '#E1E1E1',
-  notification: '#C8102E',
+  text: '#121828', // Deeper text for better contrast
+  border: '#E6E8ED', // Softer border
+  notification: '#B91C1C',
   
-  // Status colors
-  success: '#4CAF50',
-  error: '#F44336',
-  warning: '#FF9800',
-  info: '#2196F3',
+  // Status colors - deeper, more sophisticated
+  success: '#2E7D32', // Deeper green
+  error: '#C62828', // Deeper red
+  warning: '#E65100', // Deeper orange
+  info: '#0D47A1', // Deeper blue
   
   // Specific elements
-  timer: '#C8102E',
-  stamp: '#C8102E',
-  seal: '#FCBF49',
+  timer: '#B91C1C',
+  stamp: '#B91C1C',
+  seal: '#E9AF2D',
   
-  // Text styles
-  headerText: '#1A2942',
-  bodyText: '#333333',
-  mutedText: '#757575',
+  // Text styles - more refined
+  headerText: '#0A3563',
+  bodyText: '#2D3748', // Deeper for better readability
+  mutedText: '#64748B', // Softer grey for secondary text
   
   // Transparency variants
-  primaryTransparent: 'rgba(26, 41, 66, 0.1)',
-  secondaryTransparent: 'rgba(200, 16, 46, 0.1)',
-  accentTransparent: 'rgba(252, 191, 73, 0.2)',
+  primaryTransparent: 'rgba(10, 53, 99, 0.08)', // More subtle transparency
+  secondaryTransparent: 'rgba(185, 28, 28, 0.08)',
+  accentTransparent: 'rgba(233, 175, 45, 0.15)',
 };

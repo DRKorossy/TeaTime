@@ -17,6 +17,31 @@ export default function AuthLayout() {
           backgroundColor: Colors.background,
         },
       }}
-    />
+    >
+      <Stack.Screen
+        name="sign-in"
+        options={{
+          title: "Sign In",
+        }}
+      />
+      <Stack.Screen
+        name="sign-up"
+        options={{
+          title: "Sign Up",
+        }}
+      />
+      <Stack.Screen
+        name="verification"
+        options={{
+          title: "Verification",
+        }}
+      />
+      <Stack.Screen
+        name="profile-setup"
+        options={{
+          title: "Profile Setup",
+        }}
+      />
+    </Stack>
   );
 } 

@@ -1,205 +1,321 @@
-import { useState } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
-import { Text, TextInput, Button, HelperText } from 'react-native-paper';
+import React, { useState } from 'react';
+import { StyleSheet, View, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { Text, TextInput, Button, ActivityIndicator, HelperText } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import Colors from '../../constants/Colors';
-import { supabase } from '../../services/supabase';
+import Layout from '../../constants/Layout';
+import { useAuth } from '../../context/auth';
+import { z } from 'zod';
+
+// Validation schema
+const signupSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  confirmPassword: z.string()
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"]
+});
 
 export default function SignUpScreen() {
+  const router = useRouter();
+  const { signUp, loading, errorMessage } = useAuth();
+  
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [address, setAddress] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  
-  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<{ 
+    name?: string; 
+    username?: string;
+    email?: string; 
+    password?: string;
+    confirmPassword?: string;
+    form?: string;
+  }>({});
 
-  const validateInputs = () => {
-    if (!email || !password || !confirmPassword || !fullName || !address || !dateOfBirth) {
-      setError('All fields are required');
+  const validateForm = () => {
+    try {
+      signupSchema.parse({ name, username, email, password, confirmPassword });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const formattedErrors: any = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            formattedErrors[err.path[0]] = err.message;
+          }
+        });
+        setErrors(formattedErrors);
+      }
       return false;
     }
-    
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return false;
-    }
-    
-    // Simple email validation
-    const emailRegex = /\S+@\S+\.\S+/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
-      return false;
-    }
-    
-    // Simple date validation (format: YYYY-MM-DD)
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(dateOfBirth)) {
-      setError('Please enter date of birth in YYYY-MM-DD format');
-      return false;
-    }
-    
-    return true;
   };
 
   const handleSignUp = async () => {
-    if (!validateInputs()) return;
+    if (!validateForm()) return;
     
-    setLoading(true);
-    setError('');
-    
-    try {
-      // Sign up with Supabase
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            address,
-            date_of_birth: dateOfBirth,
-          },
-        },
-      });
-      
-      if (signUpError) throw signUpError;
-      
-      // Navigate to verification screen
-      router.replace('/auth/verification');
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during registration');
-      console.error('Sign up error:', err.message);
-    } finally {
-      setLoading(false);
+    const { error } = await signUp(email, password, username, name);
+    if (error) {
+      setErrors({ form: errorMessage || 'Error creating account' });
     }
   };
 
+  const goToSignIn = () => {
+    router.push('/auth/sign-in');
+  };
+
+  const goBack = () => {
+    router.back();
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Official Registration</Text>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={80}
+    >
+      <StatusBar style="dark" />
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.backButtonContainer}>
+          <TouchableOpacity onPress={goBack} style={styles.backButton}>
+            <Text style={styles.backButtonText}>← Back</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.logoContainer}>
+          <Text style={styles.logoText}>T</Text>
+        </View>
+        
+        <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.subtitle}>Join the Official Teatime Authority</Text>
+        
+        {errors.form && (
+          <HelperText type="error" visible={!!errors.form} style={styles.errorMessage}>
+            {errors.form}
+          </HelperText>
+        )}
         
         <View style={styles.formContainer}>
           <TextInput
-            label="Email Address"
+            label="Full Name"
+            value={name}
+            onChangeText={setName}
+            style={styles.input}
+            mode="outlined"
+            error={!!errors.name}
+            disabled={loading}
+          />
+          {errors.name && (
+            <HelperText type="error" visible={!!errors.name}>
+              {errors.name}
+            </HelperText>
+          )}
+          
+          <TextInput
+            label="Username"
+            value={username}
+            onChangeText={setUsername}
+            style={styles.input}
+            mode="outlined"
+            autoCapitalize="none"
+            error={!!errors.username}
+            disabled={loading}
+          />
+          {errors.username && (
+            <HelperText type="error" visible={!!errors.username}>
+              {errors.username}
+            </HelperText>
+          )}
+          
+          <TextInput
+            label="Email"
             value={email}
             onChangeText={setEmail}
-            mode="outlined"
             style={styles.input}
-            autoCapitalize="none"
+            mode="outlined"
             keyboardType="email-address"
+            autoCapitalize="none"
+            error={!!errors.email}
+            disabled={loading}
           />
+          {errors.email && (
+            <HelperText type="error" visible={!!errors.email}>
+              {errors.email}
+            </HelperText>
+          )}
           
           <TextInput
             label="Password"
             value={password}
             onChangeText={setPassword}
-            mode="outlined"
             style={styles.input}
-            secureTextEntry
+            mode="outlined"
+            secureTextEntry={!showPassword}
+            error={!!errors.password}
+            disabled={loading}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? "eye-off" : "eye"}
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            }
           />
+          {errors.password && (
+            <HelperText type="error" visible={!!errors.password}>
+              {errors.password}
+            </HelperText>
+          )}
           
           <TextInput
             label="Confirm Password"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
-            mode="outlined"
             style={styles.input}
-            secureTextEntry
-          />
-          
-          <TextInput
-            label="Full Name"
-            value={fullName}
-            onChangeText={setFullName}
             mode="outlined"
-            style={styles.input}
+            secureTextEntry={!showPassword}
+            error={!!errors.confirmPassword}
+            disabled={loading}
           />
-          
-          <TextInput
-            label="Address/Postcode"
-            value={address}
-            onChangeText={setAddress}
-            mode="outlined"
-            style={styles.input}
-          />
-          
-          <TextInput
-            label="Date of Birth (YYYY-MM-DD)"
-            value={dateOfBirth}
-            onChangeText={setDateOfBirth}
-            mode="outlined"
-            style={styles.input}
-            keyboardType="numeric"
-            placeholder="1990-01-01"
-          />
-          
-          {error ? (
-            <HelperText type="error" visible={!!error}>
-              {error}
+          {errors.confirmPassword && (
+            <HelperText type="error" visible={!!errors.confirmPassword}>
+              {errors.confirmPassword}
             </HelperText>
-          ) : null}
+          )}
           
           <Button
             mode="contained"
             onPress={handleSignUp}
             style={styles.button}
-            loading={loading}
             disabled={loading}
           >
-            Register
-          </Button>
-          
-          <Button
-            mode="text"
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            Back
+            {loading ? (
+              <ActivityIndicator size={24} color={Colors.background} />
+            ) : (
+              "Create Account"
+            )}
           </Button>
         </View>
-      </View>
-    </ScrollView>
+        
+        <View style={styles.termsContainer}>
+          <Text style={styles.termsText}>
+            By creating an account, you agree to the official tea consumption regulations set 
+            forth by His Majesty's Government. Compliance is mandatory.
+          </Text>
+        </View>
+        
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Already have an account?</Text>
+          <TouchableOpacity onPress={goToSignIn}>
+            <Text style={styles.signInText}>Sign In</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-  },
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: Colors.background,
   },
+  scrollContent: {
+    flexGrow: 1,
+    padding: Layout.spacing.l,
+  },
+  backButtonContainer: {
+    marginBottom: Layout.spacing.l,
+  },
+  backButton: {
+    padding: Layout.spacing.xs,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: Colors.primary,
+  },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Layout.spacing.m,
+    borderWidth: 2,
+    borderColor: Colors.secondary,
+    alignSelf: 'center',
+  },
+  logoText: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: Colors.primary,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: Colors.primary,
     textAlign: 'center',
-    marginVertical: 20,
+    marginBottom: Layout.spacing.xs,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: Colors.mutedText,
+    textAlign: 'center',
+    marginBottom: Layout.spacing.xl,
+  },
+  errorMessage: {
+    textAlign: 'center',
+    marginBottom: Layout.spacing.m,
+    fontSize: 14,
   },
   formContainer: {
-    backgroundColor: Colors.card,
-    borderRadius: 8,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    marginBottom: Layout.spacing.m,
   },
   input: {
-    marginBottom: 15,
+    marginBottom: Layout.spacing.s,
+    backgroundColor: Colors.background,
   },
   button: {
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: Layout.spacing.m,
+    paddingVertical: 6,
+    backgroundColor: Colors.primary,
   },
-  backButton: {
-    marginTop: 5,
+  termsContainer: {
+    marginBottom: Layout.spacing.l,
+  },
+  termsText: {
+    fontSize: 12,
+    color: Colors.mutedText,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 'auto',
+    paddingVertical: Layout.spacing.m,
+  },
+  footerText: {
+    color: Colors.mutedText,
+    marginRight: 5,
+  },
+  signInText: {
+    color: Colors.primary,
+    fontWeight: 'bold',
   },
 }); 

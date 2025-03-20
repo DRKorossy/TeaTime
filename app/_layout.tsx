@@ -1,69 +1,60 @@
-import { useEffect } from 'react';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { PaperProvider, MD3LightTheme } from 'react-native-paper';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useFonts } from 'expo-font';
+import React, { useEffect } from 'react';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import Colors from '../constants/Colors';
+import { useColorScheme } from 'react-native';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { AuthProvider, useAuth } from '../context/auth';
+import { theme } from '../theme';
 
-// Prevent the splash screen from auto-hiding
+// Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
-// Create a custom theme extending MD3LightTheme
-const theme = {
-  ...MD3LightTheme,
-  colors: {
-    ...MD3LightTheme.colors,
-    primary: Colors.primary,
-    secondary: Colors.secondary,
-    accent: Colors.accent,
-    background: Colors.background,
-    error: Colors.error,
-    text: Colors.text,
-    surface: Colors.card,
-    surfaceVariant: Colors.primaryTransparent,
-  },
-  fonts: {
-    ...MD3LightTheme.fonts,
-    // You can customize fonts here if needed
-  },
+export { ErrorBoundary } from 'expo-router';
+
+export const unstable_settings = {
+  // Ensure any route can link back to `/`
+  initialRouteName: '(tabs)',
 };
 
-export default function RootLayout() {
-  // Load fonts
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
-  });
-
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
+function RootLayoutNav() {
+  const colorScheme = useColorScheme();
+  const { session, initialized } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    if (!initialized) return;
+
+    // Bypass authentication and always go to main app
+    if (!session && segments[0] !== '(tabs)') {
+      router.replace('/(tabs)');
     }
-  }, [loaded]);
+  }, [session, initialized, segments]);
 
-  if (!loaded) {
-    return null;
-  }
+  return (
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="welcome" options={{ headerShown: false }} />
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
+        <Stack.Screen name="(modals)" options={{ headerShown: false }} />
+      </Stack>
+    </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  // Hide splash screen immediately
+  useEffect(() => {
+    SplashScreen.hideAsync();
+  }, []);
 
   return (
     <PaperProvider theme={theme}>
-      <StatusBar style="auto" />
-      <Stack screenOptions={{
-        headerStyle: {
-          backgroundColor: Colors.primary,
-        },
-        headerTintColor: Colors.background,
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }} />
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
     </PaperProvider>
   );
 }
