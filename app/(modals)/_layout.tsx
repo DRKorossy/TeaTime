@@ -30,6 +30,13 @@ export default function ModalsLayout() {
           headerTitleAlign: "center",
         }}
       />
+      <Stack.Screen
+        name="donation-payment"
+        options={{
+          title: "Charity Donation",
+          headerTitleAlign: "center",
+        }}
+      />
     </Stack>
   );
 } 

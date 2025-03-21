@@ -199,102 +199,113 @@ export default function HomeScreen() {
     const areCommentsExpanded = expandedComments.includes(item.id);
     
     return (
-      <Card style={styles.card}>
-        <Card.Content>
-          {/* User header */}
-          <View style={styles.postHeader}>
-            <View style={styles.userInfo}>
-              <Avatar.Image size={40} source={{ uri: item.user.avatarUrl }} />
-              <View style={styles.nameContainer}>
-                <Text variant="titleMedium">{item.user.name}</Text>
-                <Text variant="bodySmall" style={styles.usernameText}>@{item.user.username}</Text>
+      <View style={styles.cardWrapper}>
+        <Card style={styles.card} mode="elevated">
+          <Card.Content style={styles.cardContent}>
+            {/* User header */}
+            <View style={styles.postHeader}>
+              <View style={styles.userInfo}>
+                <Avatar.Image size={40} source={{ uri: item.user.avatarUrl }} style={styles.avatar} />
+                <View style={styles.nameContainer}>
+                  <Text variant="titleMedium" style={styles.userName}>{item.user.name}</Text>
+                  <Text variant="bodySmall" style={styles.usernameText}>@{item.user.username}</Text>
+                </View>
+              </View>
+              <View style={styles.postMeta}>
+                <Text variant="bodySmall" style={styles.timestamp}>{formatPostTime(item.timestamp)}</Text>
+                {!item.isOnTime && (
+                  <View style={styles.lateTagContainer}>
+                    <Text variant="bodySmall" style={styles.lateTag}>LATE</Text>
+                  </View>
+                )}
               </View>
             </View>
-            <View style={styles.postMeta}>
-              <Text variant="bodySmall" style={styles.timestamp}>{formatPostTime(item.timestamp)}</Text>
-              {!item.isOnTime && (
-                <Text variant="bodySmall" style={styles.lateTag}>LATE</Text>
+            
+            {/* Tea image */}
+            <View style={styles.imageContainer}>
+              <Image source={{ uri: item.imageUrl }} style={styles.teaImage} />
+            </View>
+            
+            {/* Interaction buttons */}
+            <View style={styles.interactions}>
+              <Button 
+                icon="heart" 
+                mode="text" 
+                onPress={() => handleLike(item.id)}
+                style={styles.interactionButton}
+                labelStyle={styles.interactionButtonLabel}
+              >
+                {item.likes}
+              </Button>
+              <Button 
+                icon="comment" 
+                mode="text" 
+                onPress={() => toggleComments(item.id)}
+                style={styles.interactionButton}
+                labelStyle={styles.interactionButtonLabel}
+              >
+                {item.comments.length}
+              </Button>
+            </View>
+            
+            {/* Tea details */}
+            <View style={styles.teaInfo}>
+              <Text variant="bodyMedium" style={styles.teaTypeText}>
+                <Text style={styles.userName}>{item.user.name}</Text> {/* Username in bold */}
+                <Text> - {item.teaType} tea</Text>
+              </Text>
+              {item.fine && (
+                <View style={styles.fineContainer}>
+                  <Text variant="bodySmall" style={styles.fineText}>
+                    Fine: £{item.fine.amount.toFixed(2)} ({item.fine.status})
+                  </Text>
+                </View>
               )}
             </View>
-          </View>
-          
-          {/* Tea image */}
-          <Image source={{ uri: item.imageUrl }} style={styles.teaImage} />
-          
-          {/* Tea details */}
-          <View style={styles.teaInfo}>
-            <Text variant="bodyMedium">Tea type: {item.teaType}</Text>
-            {item.fine && (
-              <Text variant="bodySmall" style={styles.fineText}>
-                Fine: £{item.fine.amount.toFixed(2)} ({item.fine.status})
-              </Text>
-            )}
-          </View>
-          
-          {/* Interaction buttons */}
-          <View style={styles.interactions}>
-            <Button 
-              icon="heart" 
-              mode="text" 
-              onPress={() => handleLike(item.id)}
-              style={styles.interactionButton}
-            >
-              {item.likes}
-            </Button>
-            <Button 
-              icon="comment" 
-              mode="text" 
-              onPress={() => toggleComments(item.id)}
-              style={styles.interactionButton}
-            >
-              {item.comments.length}
-            </Button>
-          </View>
-          
-          {/* Comments section */}
-          {(areCommentsExpanded || item.comments.length < 2) && item.comments.length > 0 && (
-            <View style={styles.commentsSection}>
-              <Divider style={styles.divider} />
-              {item.comments.map(comment => (
-                <View key={comment.id} style={styles.comment}>
-                  <Avatar.Image 
-                    size={24} 
-                    source={{ uri: comment.user.avatarUrl }} 
-                    style={styles.commentAvatar}
-                  />
-                  <View style={styles.commentContent}>
-                    <Text variant="bodySmall" style={styles.commentUsername}>
-                      {comment.user.name}
-                    </Text>
-                    <Text variant="bodyMedium">{comment.text}</Text>
-                    <Text variant="bodySmall" style={styles.commentTime}>
-                      {formatPostTime(comment.timestamp)}
+            
+            {/* Comments section */}
+            {(areCommentsExpanded || item.comments.length < 2) && item.comments.length > 0 && (
+              <View style={styles.commentsSection}>
+                {item.comments.length > 1 && !areCommentsExpanded && (
+                  <TouchableOpacity onPress={() => toggleComments(item.id)}>
+                    <Text style={styles.viewAllComments}>View all {item.comments.length} comments</Text>
+                  </TouchableOpacity>
+                )}
+                {item.comments.map(comment => (
+                  <View key={comment.id} style={styles.comment}>
+                    <Text style={styles.commentContent}>
+                      <Text style={styles.commentUsername}>{comment.user.name}</Text>
+                      <Text style={styles.commentText}> {comment.text}</Text>
                     </Text>
                   </View>
-                </View>
-              ))}
+                ))}
+              </View>
+            )}
+            
+            {/* Comment input box */}
+            <View style={styles.commentInputContainer}>
+              <TextInput
+                placeholder="Add a comment..."
+                value={newComment}
+                onChangeText={setNewComment}
+                style={styles.commentInput}
+                mode="flat"
+                dense
+                underlineColor="transparent"
+                activeUnderlineColor="transparent"
+                contentStyle={styles.commentInputContent}
+              />
+              <IconButton
+                icon="send"
+                size={22}
+                onPress={() => handleAddComment(item.id)}
+                disabled={!newComment.trim()}
+                iconColor={newComment.trim() ? Colors.primary : Colors.mutedText}
+              />
             </View>
-          )}
-          
-          {/* Comment input box */}
-          <View style={styles.commentInputContainer}>
-            <TextInput
-              placeholder="Add a comment..."
-              value={newComment}
-              onChangeText={setNewComment}
-              style={styles.commentInput}
-              mode="outlined"
-              dense
-            />
-            <IconButton
-              icon="send"
-              size={20}
-              onPress={() => handleAddComment(item.id)}
-              disabled={!newComment.trim()}
-            />
-          </View>
-        </Card.Content>
-      </Card>
+          </Card.Content>
+        </Card>
+      </View>
     );
   };
 
@@ -303,79 +314,78 @@ export default function HomeScreen() {
     return `${String(time.hours).padStart(2, '0')}:${String(time.minutes).padStart(2, '0')}:${String(time.seconds).padStart(2, '0')}`;
   };
 
+  const renderCountdownHeader = () => (
+    <View style={styles.countdownContainer}>
+      {isTeaTime ? (
+        <>
+          <View style={styles.officialBadge}>
+            <Text style={styles.officialBadgeText}>OFFICIAL</Text>
+          </View>
+          <Text variant="titleLarge" style={styles.teaTimeText}>
+            🫖 It's Tea Time! 🫖
+          </Text>
+          <Text variant="bodyMedium" style={styles.teaTimeSubtext}>
+            By royal decree, you are required to take a photo of your tea within {Config.teatime.submissionWindowMinutes} minutes
+          </Text>
+          <Button 
+            mode="contained" 
+            onPress={handleTakePhoto}
+            style={styles.takePhotoButton}
+            labelStyle={styles.takePhotoButtonLabel}
+            icon="camera"
+            contentStyle={styles.takePhotoButtonContent}
+          >
+            Submit Royal Tea Photo
+          </Button>
+        </>
+      ) : (
+        <>
+          <View style={styles.officialBadge}>
+            <Text style={styles.officialBadgeText}>MANDATORY</Text>
+          </View>
+          <Text variant="titleMedium" style={styles.countdownLabel}>
+            Royal Tea Time In:
+          </Text>
+          <Text variant="headlineLarge" style={styles.countdownText}>
+            {formatCountdown(timeRemaining)}
+          </Text>
+          <Text variant="bodyMedium" style={styles.countdownSubtext}>
+            Daily tea time at {Config.teatime.hour}:{Config.teatime.minute.toString().padStart(2, '0')} PM
+          </Text>
+          <View style={styles.reminderBadge}>
+            <Text style={styles.reminderText}>Failure to comply will result in penalties</Text>
+          </View>
+        </>
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Tea Time Countdown Header */}
       <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.headerTitle}>
-          TeaTime Authority
-        </Text>
-        <View style={styles.headerLine} />
+        <Text style={styles.headerTitle}>TeaTime</Text>
       </View>
       
-      <View style={styles.countdownContainer}>
-        {isTeaTime ? (
-          <>
-            <Text variant="titleLarge" style={styles.teaTimeText}>
-              🫖 It's Tea Time! 🫖
-            </Text>
-            <Text variant="bodyMedium" style={styles.teaTimeSubtext}>
-              Take a photo of your tea within {Config.teatime.submissionWindowMinutes} minutes
-            </Text>
-            <Button 
-              mode="contained" 
-              onPress={handleTakePhoto}
-              style={styles.takePhotoButton}
-              labelStyle={styles.takePhotoButtonLabel}
-            >
-              Submit Tea Photo
-            </Button>
-          </>
-        ) : (
-          <>
-            <Text variant="titleMedium" style={styles.countdownLabel}>
-              Next Tea Time In:
-            </Text>
-            <Text variant="headlineLarge" style={styles.countdownText}>
-              {formatCountdown(timeRemaining)}
-            </Text>
-            <Text variant="bodyMedium" style={styles.countdownSubtext}>
-              Remember your daily tea at {Config.teatime.hour}:{Config.teatime.minute.toString().padStart(2, '0')} PM
-            </Text>
-          </>
+      <FlatList
+        data={feed}
+        renderItem={renderFeedItem}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
+        contentContainerStyle={styles.feedList}
+        ListEmptyComponent={(
+          <View style={styles.emptyFeed}>
+            <Text style={styles.emptyFeedText}>No tea activity yet. Connect with fellow tea enthusiasts to view their submissions.</Text>
+          </View>
         )}
-      </View>
-      
-      <View style={styles.feedHeader}>
-        <Text variant="titleMedium" style={styles.feedTitle}>Recent Submissions</Text>
-      </View>
-      
-      <Divider style={styles.divider} />
-      
-      {/* Feed section */}
-      <View style={styles.feedSection}>
-        <Text style={styles.feedTitle}>Friend Activity</Text>
-        
-        <FlatList
-          data={feed}
-          renderItem={renderFeedItem}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl 
-              refreshing={refreshing} 
-              onRefresh={onRefresh}
-              colors={[Colors.primary]}
-              tintColor={Colors.primary}
-            />
-          }
-          contentContainerStyle={styles.feedList}
-          ListEmptyComponent={(
-            <View style={styles.emptyFeed}>
-              <Text>No tea activity yet. Add friends to see their submissions!</Text>
-            </View>
-          )}
-        />
-      </View>
+        ListHeaderComponent={renderCountdownHeader}
+      />
     </SafeAreaView>
   );
 }
@@ -386,186 +396,283 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    paddingHorizontal: Layout.spacing.l,
-    paddingTop: Layout.spacing.l,
-    paddingBottom: Layout.spacing.m,
-    flexDirection: 'column',
-    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.background,
   },
   headerTitle: {
-    color: Colors.primary,
+    fontSize: 24,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    color: Colors.primary,
     textAlign: 'center',
   },
-  headerLine: {
-    height: 2,
-    width: 40,
-    backgroundColor: Colors.accent,
-    marginTop: Layout.spacing.xs,
-    borderRadius: 2,
-  },
   countdownContainer: {
-    ...Layout.card,
-    backgroundColor: Colors.primaryTransparent,
-    marginHorizontal: Layout.spacing.l,
-    marginBottom: Layout.spacing.l,
+    backgroundColor: Colors.card,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    marginTop: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: `${Colors.primary}20`,
+    borderColor: Colors.border,
+    borderRadius: Layout.borderRadius.medium,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+    position: 'relative',
+    overflow: 'hidden',
+    padding: Layout.spacing.m,
+    paddingBottom: Layout.spacing.l,
+  },
+  officialBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: Colors.accent,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderBottomLeftRadius: 8,
+  },
+  officialBadgeText: {
+    color: Colors.primary,
+    fontWeight: '700',
+    fontSize: 10,
+    letterSpacing: 0.5,
   },
   countdownLabel: {
     color: Colors.primary,
+    marginTop: Layout.spacing.m,
     marginBottom: Layout.spacing.xs,
-    fontWeight: '500',
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   countdownText: {
     color: Colors.primary,
     fontWeight: '700',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
     marginVertical: Layout.spacing.xs,
   },
   countdownSubtext: {
     color: Colors.bodyText,
     textAlign: 'center',
-    opacity: 0.8,
+    opacity: 0.9,
+    paddingHorizontal: Layout.spacing.m,
+    lineHeight: 20,
+  },
+  reminderBadge: {
+    backgroundColor: `${Colors.primary}15`,
+    paddingHorizontal: Layout.spacing.m,
+    paddingVertical: Layout.spacing.xs,
+    borderRadius: Layout.borderRadius.small,
+    marginTop: Layout.spacing.m,
+    marginBottom: Layout.spacing.s,
+  },
+  reminderText: {
+    color: Colors.primary,
+    fontSize: 12,
+    fontWeight: '500',
+    fontStyle: 'italic',
   },
   teaTimeText: {
     color: Colors.primary,
     fontWeight: '700',
     textAlign: 'center',
+    marginTop: Layout.spacing.m,
     marginBottom: Layout.spacing.s,
   },
   teaTimeSubtext: {
     color: Colors.bodyText,
     textAlign: 'center',
     marginBottom: Layout.spacing.m,
+    paddingHorizontal: Layout.spacing.m,
+    lineHeight: 20,
   },
   takePhotoButton: {
     marginTop: Layout.spacing.s,
-    backgroundColor: Colors.primary,
-    borderRadius: Layout.borderRadius.medium,
-    paddingHorizontal: Layout.spacing.m,
-    elevation: 2,
-  },
-  takePhotoButtonLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    paddingVertical: 2,
-  },
-  feedHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Layout.spacing.l,
     marginBottom: Layout.spacing.m,
-  },
-  feedTitle: {
-    color: Colors.headerText,
-    fontWeight: '600',
-  },
-  card: {
-    marginHorizontal: Layout.spacing.l,
-    marginBottom: Layout.spacing.l,
-    borderRadius: Layout.borderRadius.medium,
-    overflow: 'hidden',
+    backgroundColor: Colors.primary,
+    borderRadius: Layout.borderRadius.small,
+    paddingHorizontal: Layout.spacing.m,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.03)',
+    shadowRadius: 3,
   },
-  divider: {
-    marginBottom: Layout.spacing.m,
+  takePhotoButtonContent: {
+    height: 40,
   },
-  feedSection: {
-    flex: 1,
-    padding: Layout.spacing.m,
-    paddingTop: 0,
+  takePhotoButtonLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   feedList: {
-    paddingBottom: Layout.spacing.l,
+    paddingBottom: 16,
+  },
+  emptyFeed: {
+    padding: Layout.spacing.l,
+    alignItems: 'center',
+    backgroundColor: Colors.card,
+    margin: Layout.spacing.l,
+    borderRadius: Layout.borderRadius.small,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  emptyFeedText: {
+    textAlign: 'center',
+    color: Colors.bodyText,
+    lineHeight: 20,
+  },
+  cardWrapper: {
+    marginBottom: 16,
+  },
+  card: {
+    margin: 0,
+    elevation: 0,
+    shadowOpacity: 0,
+    borderRadius: 0,
+    backgroundColor: Colors.card,
+    borderWidth: 0,
+    borderColor: 'transparent',
+  },
+  cardContent: {
+    padding: 0,
   },
   postHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: Layout.spacing.m,
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  avatar: {
+    backgroundColor: Colors.background,
+  },
   nameContainer: {
     marginLeft: Layout.spacing.s,
   },
+  userName: {
+    fontWeight: '600',
+    color: Colors.text,
+  },
   usernameText: {
     color: Colors.mutedText,
+    fontSize: 12,
   },
   postMeta: {
     alignItems: 'flex-end',
   },
   timestamp: {
     color: Colors.mutedText,
+    fontSize: 12,
+  },
+  lateTagContainer: {
+    backgroundColor: `${Colors.error}15`,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: Layout.borderRadius.small,
+    marginTop: Layout.spacing.xs,
   },
   lateTag: {
     color: Colors.error,
-    fontWeight: 'bold',
-    marginTop: Layout.spacing.xs,
+    fontWeight: '600',
+    fontSize: 10,
+  },
+  imageContainer: {
+    width: '100%',
+    height: 375, // Instagram-like square-ish ratio
+    backgroundColor: Colors.background,
   },
   teaImage: {
     width: '100%',
-    height: 250,
-    borderRadius: Layout.borderRadius.medium,
-    marginBottom: Layout.spacing.s,
-  },
-  teaInfo: {
-    marginBottom: Layout.spacing.s,
-  },
-  fineText: {
-    color: Colors.error,
-    marginTop: Layout.spacing.xs,
+    height: '100%',
+    resizeMode: 'cover',
   },
   interactions: {
     flexDirection: 'row',
-    marginVertical: Layout.spacing.xs,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   interactionButton: {
     marginRight: Layout.spacing.s,
   },
+  interactionButtonLabel: {
+    color: Colors.text,
+    fontWeight: '600',
+  },
+  teaInfo: {
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  teaTypeText: {
+    color: Colors.bodyText,
+    fontSize: 14,
+  },
+  teaTypeName: {
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  fineContainer: {
+    marginTop: Layout.spacing.xs,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: `${Colors.error}10`,
+    borderRadius: Layout.borderRadius.small,
+    borderLeftWidth: 2,
+    borderLeftColor: Colors.error,
+    alignSelf: 'flex-start',
+  },
+  fineText: {
+    color: Colors.error,
+    fontWeight: '600',
+    fontSize: 12,
+  },
   commentsSection: {
-    marginTop: Layout.spacing.s,
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 8,
+  },
+  viewAllComments: {
+    color: Colors.mutedText,
+    fontSize: 14,
+    marginBottom: 6,
   },
   comment: {
-    flexDirection: 'row',
-    marginTop: Layout.spacing.s,
-  },
-  commentAvatar: {
-    marginRight: Layout.spacing.s,
+    marginBottom: 3,
   },
   commentContent: {
-    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
   },
   commentUsername: {
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: Colors.text,
   },
-  commentTime: {
-    color: Colors.mutedText,
-    fontSize: 12,
-    marginTop: 2,
+  commentText: {
+    color: Colors.bodyText,
   },
   commentInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Layout.spacing.s,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingHorizontal: 8,
   },
   commentInput: {
     flex: 1,
+    backgroundColor: 'transparent',
+    fontSize: 14,
+    height: 40,
   },
-  emptyFeed: {
-    padding: Layout.spacing.l,
-    alignItems: 'center',
+  commentInputContent: {
+    paddingHorizontal: 0,
   },
 });

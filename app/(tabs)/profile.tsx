@@ -139,7 +139,7 @@ export default function ProfileScreen() {
     <View style={styles.tabContent}>
       {submissions.map((submission) => (
         <Card key={submission.id} style={styles.submissionCard}>
-          <Card.Content>
+          <Card.Content style={styles.cardContent}>
             <View style={styles.submissionHeader}>
               <Text variant="titleMedium">
                 {formatSubmissionDate(submission.date)}
@@ -151,6 +151,7 @@ export default function ProfileScreen() {
                     ? styles.approvedChip 
                     : styles.missedChip
                 ]}
+                textStyle={styles.statusChipText}
               >
                 {submission.status}
               </Chip>
@@ -166,32 +167,54 @@ export default function ProfileScreen() {
                 </View>
                 
                 {submission.imageUrl && (
-                  <Image 
-                    source={{ uri: submission.imageUrl }} 
-                    style={styles.submissionImage} 
-                  />
+                  <View style={styles.imageContainer}>
+                    <Image 
+                      source={{ uri: submission.imageUrl }} 
+                      style={styles.submissionImage} 
+                    />
+                  </View>
                 )}
               </>
             ) : (
               <View style={styles.fineDetails}>
-                <Text variant="bodyMedium">You missed tea time</Text>
+                <Text variant="bodyMedium" style={styles.missedText}>You missed tea time</Text>
                 {submission.fine && (
                   <>
-                    <TouchableOpacity 
-                      style={styles.fineContainer} 
-                      onPress={() => handlePayFine(submission.fine)}
-                    >
-                      <Text style={styles.fineText}>
-                        Fine: £{submission.fine.amount.toFixed(2)}
-                      </Text>
-                      <Text style={styles.payFineText}>
-                        Tap to pay fine
-                      </Text>
-                    </TouchableOpacity>
+                    <View style={styles.fineContainer}>
+                      <View style={styles.fineInnerContainer}>
+                        <Text style={styles.fineText}>
+                          Fine: £{submission.fine.amount.toFixed(2)}
+                        </Text>
+                        <View style={styles.fineStatusContainer}>
+                          <View style={[
+                            styles.fineStatusIndicator,
+                            submission.fine.status === 'Paid' ? styles.paidIndicator : styles.unpaidIndicator
+                          ]} />
+                          <Text style={[
+                            styles.fineStatusText,
+                            submission.fine.status === 'Paid' ? styles.paidText : styles.unpaidText
+                          ]}>
+                            {submission.fine.status}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
                     {submission.fine.status === 'Paid' && (
-                      <Text variant="bodySmall">
+                      <Text variant="bodySmall" style={styles.paymentDateText}>
                         Paid on {format(submission.fine.paymentDate, 'MMM d, yyyy')}
                       </Text>
+                    )}
+                    {submission.fine.status !== 'Paid' && (
+                      <Button 
+                        mode="contained" 
+                        style={styles.payNowButton}
+                        onPress={() => handlePayFine({
+                          amount: submission.fine.amount,
+                          id: submission.id
+                        })}
+                      >
+                        Pay Fine Now
+                      </Button>
                     )}
                   </>
                 )}
@@ -208,19 +231,23 @@ export default function ProfileScreen() {
       {donations.length > 0 ? (
         donations.map((donation) => (
           <Card key={donation.id} style={styles.donationCard}>
-            <Card.Content>
+            <Card.Content style={styles.cardContent}>
               <View style={styles.donationHeader}>
-                <Text variant="titleMedium">£{donation.amount.toFixed(2)}</Text>
-                <Text variant="bodyMedium">{format(donation.date, 'MMM d, yyyy')}</Text>
+                <Text variant="titleMedium" style={styles.donationAmount}>£{donation.amount.toFixed(2)}</Text>
+                <Text variant="bodyMedium" style={styles.donationDate}>{format(donation.date, 'MMM d, yyyy')}</Text>
               </View>
               
-              <Text variant="bodyMedium">Charity: {donation.charity}</Text>
+              <Text variant="bodyMedium" style={styles.donationCharity} numberOfLines={2} ellipsizeMode="tail">
+                Charity: {donation.charity}
+              </Text>
               
               {donation.receiptUrl && (
-                <Image 
-                  source={{ uri: donation.receiptUrl }} 
-                  style={styles.receiptImage} 
-                />
+                <View style={styles.receiptContainer}>
+                  <Image 
+                    source={{ uri: donation.receiptUrl }} 
+                    style={styles.receiptImage} 
+                  />
+                </View>
               )}
             </Card.Content>
           </Card>
@@ -241,18 +268,24 @@ export default function ProfileScreen() {
             title="Current Streak"
             description={`${user.streakDays} days`}
             left={() => <List.Icon icon="fire" color={Colors.accent} />}
+            titleStyle={styles.statTitle}
+            descriptionStyle={styles.statDescription}
           />
           
           <List.Item
             title="Compliance Rate"
             description={`${user.compliancePct}%`}
             left={() => <List.Icon icon="check-circle" color={Colors.success} />}
+            titleStyle={styles.statTitle}
+            descriptionStyle={styles.statDescription}
           />
           
           <List.Item
             title="Member Since"
             description={format(user.joinDate, 'MMMM d, yyyy')}
             left={() => <List.Icon icon="calendar" color={Colors.primary} />}
+            titleStyle={styles.statTitle}
+            descriptionStyle={styles.statDescription}
           />
           
           <Divider style={styles.statsDivider} />
@@ -260,33 +293,111 @@ export default function ProfileScreen() {
           <Text variant="titleMedium" style={styles.achievementsTitle}>Achievements</Text>
           
           <View style={styles.achievements}>
-            <Chip icon="trophy" style={styles.achievementChip}>1 Week Streak</Chip>
-            <Chip icon="tea" style={styles.achievementChip}>Tea Enthusiast</Chip>
+            <Chip icon="trophy" style={styles.achievementChip} textStyle={styles.achievementText}>1 Week Streak</Chip>
+            <Chip icon="tea" style={styles.achievementChip} textStyle={styles.achievementText}>Tea Enthusiast</Chip>
           </View>
         </Card.Content>
       </Card>
     </View>
   );
   
+  const renderEditDialog = () => (
+    <Portal>
+      <Dialog
+        visible={editDialogVisible}
+        onDismiss={() => setEditDialogVisible(false)}
+        style={styles.editDialog}
+      >
+        <Dialog.Title style={styles.dialogTitle}>Edit Profile</Dialog.Title>
+        <Dialog.Content>
+          <View style={styles.avatarEditContainer}>
+            <Avatar.Image 
+              source={{ uri: user.avatarUrl }} 
+              size={80} 
+              style={styles.avatarEdit}
+            />
+            <TouchableOpacity 
+              style={styles.changePhotoButton}
+              onPress={handlePickImage}
+            >
+              <Text style={styles.changePhotoText}>Change Photo</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <TextInput
+            label="Name"
+            value={editForm.name}
+            onChangeText={(text) => setEditForm({ ...editForm, name: text })}
+            style={styles.input}
+            mode="outlined"
+          />
+          <TextInput
+            label="Bio"
+            value={editForm.bio}
+            onChangeText={(text) => setEditForm({ ...editForm, bio: text })}
+            style={styles.input}
+            multiline
+            numberOfLines={3}
+            mode="outlined"
+          />
+          <TextInput
+            label="Location"
+            value={editForm.location}
+            onChangeText={(text) => setEditForm({ ...editForm, location: text })}
+            style={styles.input}
+            mode="outlined"
+          />
+          <TextInput
+            label="Favorite Tea"
+            value={editForm.favoriteTea}
+            onChangeText={(text) => setEditForm({ ...editForm, favoriteTea: text })}
+            style={styles.input}
+            mode="outlined"
+          />
+        </Dialog.Content>
+        <Dialog.Actions style={styles.dialogActions}>
+          <Button 
+            onPress={() => setEditDialogVisible(false)}
+            style={styles.cancelButton}
+            labelStyle={styles.cancelButtonText}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onPress={handleUpdateProfile}
+            mode="contained"
+            style={styles.saveButton}
+          >
+            Save
+          </Button>
+        </Dialog.Actions>
+      </Dialog>
+    </Portal>
+  );
+  
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handlePickImage}>
-            <Avatar.Image 
-              size={100} 
-              source={{ uri: user.avatarUrl }}
-              style={styles.avatar}
-            />
-            <View style={styles.editAvatarBadge}>
-              <Badge size={24} style={styles.editBadge}>+</Badge>
+        <View style={styles.headerContainer}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handlePickImage} style={styles.avatarContainer}>
+              <Avatar.Image 
+                size={100} 
+                source={{ uri: user.avatarUrl }}
+                style={styles.avatar}
+              />
+              <View style={styles.editAvatarBadge}>
+                <Badge size={24} style={styles.editBadge}>+</Badge>
+              </View>
+            </TouchableOpacity>
+            
+            <View style={styles.userInfo}>
+              <Text variant="headlineSmall" style={styles.userName} numberOfLines={1} ellipsizeMode="tail">{user.name}</Text>
+              <Text variant="bodyMedium" style={styles.username}>@{user.username}</Text>
+              <View style={styles.locationContainer}>
+                <Chip icon="map-marker" style={styles.locationChip} textStyle={styles.chipText}>{user.location}</Chip>
+              </View>
             </View>
-          </TouchableOpacity>
-          
-          <View style={styles.userInfo}>
-            <Text variant="headlineSmall" style={styles.userName}>{user.name}</Text>
-            <Text variant="bodyMedium">@{user.username}</Text>
-            <Chip icon="map-marker" style={styles.locationChip}>{user.location}</Chip>
           </View>
           
           <Button 
@@ -302,7 +413,13 @@ export default function ProfileScreen() {
           <Text style={styles.bioText}>{user.bio}</Text>
           <View style={styles.teaPreference}>
             <Text variant="bodyMedium">Favorite Tea: </Text>
-            <Chip icon="tea-outline" style={styles.teaChip}>{user.favoriteTea}</Chip>
+            <Chip 
+              icon="tea-outline" 
+              style={styles.teaChip} 
+              textStyle={styles.chipText}
+            >
+              {user.favoriteTea}
+            </Chip>
           </View>
         </View>
         
@@ -320,6 +437,7 @@ export default function ProfileScreen() {
             mode={activeTab === 'donations' ? 'contained' : 'outlined'}
             onPress={() => setActiveTab('donations')}
             style={styles.tab}
+            labelStyle={styles.tabLabel}
           >
             Donations
           </Button>
@@ -346,43 +464,7 @@ export default function ProfileScreen() {
         </Button>
       </ScrollView>
       
-      <Portal>
-        <Dialog visible={editDialogVisible} onDismiss={() => setEditDialogVisible(false)}>
-          <Dialog.Title>Edit Profile</Dialog.Title>
-          <Dialog.Content>
-            <TextInput
-              label="Name"
-              value={editForm.name}
-              onChangeText={(text) => setEditForm({...editForm, name: text})}
-              style={styles.input}
-            />
-            <TextInput
-              label="Bio"
-              value={editForm.bio}
-              onChangeText={(text) => setEditForm({...editForm, bio: text})}
-              multiline
-              numberOfLines={3}
-              style={styles.input}
-            />
-            <TextInput
-              label="Location"
-              value={editForm.location}
-              onChangeText={(text) => setEditForm({...editForm, location: text})}
-              style={styles.input}
-            />
-            <TextInput
-              label="Favorite Tea"
-              value={editForm.favoriteTea}
-              onChangeText={(text) => setEditForm({...editForm, favoriteTea: text})}
-              style={styles.input}
-            />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setEditDialogVisible(false)}>Cancel</Button>
-            <Button onPress={handleUpdateProfile}>Save</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+      {renderEditDialog()}
     </SafeAreaView>
   );
 }
@@ -392,11 +474,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
+  headerContainer: {
     padding: Layout.spacing.m,
-    flexDirection: 'row',
-    alignItems: 'center',
     position: 'relative',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: Layout.spacing.l,
+  },
+  avatarContainer: {
+    marginRight: Layout.spacing.m,
   },
   avatar: {
     backgroundColor: Colors.card,
@@ -410,22 +498,34 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
   userInfo: {
-    marginLeft: Layout.spacing.m,
     flex: 1,
+    paddingTop: Layout.spacing.xs,
   },
   userName: {
     fontWeight: 'bold',
     color: Colors.headerText,
+    marginBottom: 2,
+  },
+  username: {
+    color: Colors.mutedText,
+    marginBottom: 6,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 2,
   },
   locationChip: {
-    marginTop: Layout.spacing.xs,
-    height: 26,
+    height: 28,
     alignSelf: 'flex-start',
   },
+  chipText: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
   editButton: {
-    position: 'absolute',
-    top: Layout.spacing.m,
-    right: Layout.spacing.m,
+    alignSelf: 'flex-end',
+    marginTop: -Layout.spacing.xl, // Negative margin to position it properly
   },
   bioSection: {
     padding: Layout.spacing.m,
@@ -433,14 +533,17 @@ const styles = StyleSheet.create({
   },
   bioText: {
     marginBottom: Layout.spacing.s,
+    lineHeight: 20,
   },
   teaPreference: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: Layout.spacing.s,
+    flexWrap: 'wrap',
   },
   teaChip: {
-    height: 26,
+    height: 28,
+    marginTop: 4,
   },
   divider: {
     marginVertical: Layout.spacing.s,
@@ -459,6 +562,13 @@ const styles = StyleSheet.create({
   },
   submissionCard: {
     marginBottom: Layout.spacing.m,
+    borderRadius: 0,
+    overflow: 'hidden',
+    elevation: 0,
+    shadowOpacity: 0,
+    backgroundColor: Colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
   submissionHeader: {
     flexDirection: 'row',
@@ -467,7 +577,12 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.s,
   },
   statusChip: {
-    height: 24,
+    height: 28,
+  },
+  statusChipText: {
+    color: Colors.background,
+    fontSize: 12,
+    lineHeight: 16,
   },
   approvedChip: {
     backgroundColor: Colors.success,
@@ -478,49 +593,155 @@ const styles = StyleSheet.create({
   submissionDetails: {
     marginBottom: Layout.spacing.s,
   },
-  submissionImage: {
+  imageContainer: {
     width: '100%',
     height: 200,
     borderRadius: Layout.borderRadius.medium,
     marginTop: Layout.spacing.s,
+    overflow: 'hidden',
+  },
+  submissionImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   fineDetails: {
     marginBottom: Layout.spacing.s,
   },
+  missedText: {
+    color: Colors.error,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  fineContainer: {
+    marginVertical: 8,
+    borderRadius: Layout.borderRadius.small,
+    overflow: 'hidden',
+    backgroundColor: `${Colors.error}10`,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.error,
+  },
+  fineInnerContainer: {
+    padding: Layout.spacing.s,
+  },
+  fineText: {
+    fontWeight: 'bold',
+    color: Colors.error,
+    fontSize: 16,
+  },
+  fineStatusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  fineStatusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  paidIndicator: {
+    backgroundColor: Colors.success,
+  },
+  unpaidIndicator: {
+    backgroundColor: Colors.error,
+  },
+  fineStatusText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  paidText: {
+    color: Colors.success,
+  },
+  unpaidText: {
+    color: Colors.error,
+  },
+  paymentDateText: {
+    color: Colors.success,
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
   donationCard: {
     marginBottom: Layout.spacing.m,
+    borderRadius: 0,
+    overflow: 'hidden',
+    elevation: 0,
+    shadowOpacity: 0,
+    backgroundColor: Colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
   donationHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: Layout.spacing.s,
   },
-  receiptImage: {
+  donationAmount: {
+    fontWeight: '600',
+    color: Colors.primary,
+  },
+  donationDate: {
+    color: Colors.mutedText,
+    fontSize: 14,
+  },
+  donationCharity: {
+    marginBottom: Layout.spacing.s,
+  },
+  receiptContainer: {
     width: '100%',
     height: 200,
     borderRadius: Layout.borderRadius.medium,
-    marginTop: Layout.spacing.m,
+    marginTop: Layout.spacing.s,
+    overflow: 'hidden',
+  },
+  receiptImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   statsCard: {
     marginBottom: Layout.spacing.m,
+    borderRadius: Layout.borderRadius.medium,
+    overflow: 'hidden',
+    backgroundColor: Colors.card,
   },
   statsTitle: {
     marginBottom: Layout.spacing.m,
     textAlign: 'center',
     color: Colors.primary,
+    fontWeight: '600',
   },
   statsDivider: {
     marginVertical: Layout.spacing.m,
   },
+  statTitle: {
+    fontSize: 16,
+    color: Colors.bodyText,
+  },
+  statDescription: {
+    fontSize: 16,
+    color: Colors.primary,
+    fontWeight: '600',
+  },
   achievementsTitle: {
     marginBottom: Layout.spacing.s,
+    color: Colors.primary,
+    fontWeight: '600',
   },
   achievements: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginHorizontal: -Layout.spacing.xs, // Offset chip margins
   },
   achievementChip: {
     margin: Layout.spacing.xs,
+    backgroundColor: Colors.primaryTransparent,
+    height: 32,
+  },
+  achievementText: {
+    fontSize: 12,
+    color: Colors.primary,
   },
   input: {
     marginBottom: Layout.spacing.m,
@@ -534,21 +755,63 @@ const styles = StyleSheet.create({
     marginTop: Layout.spacing.xl,
     color: Colors.mutedText,
   },
-  fineContainer: {
-    marginTop: 8,
-    padding: 10,
-    backgroundColor: Colors.error + '20', // 20% opacity
-    borderRadius: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.error,
+  editDialog: {
+    borderRadius: Layout.borderRadius.large,
+    backgroundColor: Colors.card,
+    paddingBottom: Layout.spacing.m,
   },
-  fineText: {
+  dialogTitle: {
+    textAlign: 'center',
+    fontSize: 22,
     fontWeight: 'bold',
-    color: Colors.error,
+    color: Colors.text,
   },
-  payFineText: {
+  avatarEditContainer: {
+    alignItems: 'center',
+    marginBottom: Layout.spacing.m,
+  },
+  avatarEdit: {
+    marginBottom: Layout.spacing.s,
+    borderWidth: 3,
+    borderColor: Colors.primary,
+  },
+  changePhotoButton: {
+    marginTop: Layout.spacing.xs,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: `${Colors.primary}20`,
+    borderRadius: Layout.borderRadius.small,
+  },
+  changePhotoText: {
+    color: Colors.primary,
+    fontWeight: '600',
     fontSize: 12,
+  },
+  dialogActions: {
+    justifyContent: 'space-between',
+    paddingHorizontal: Layout.spacing.m,
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Layout.spacing.s,
+  },
+  cancelButtonText: {
     color: Colors.mutedText,
-    marginTop: 4,
+  },
+  saveButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Layout.spacing.m,
+  },
+  tabLabel: {
+    fontSize: 12,
+  },
+  cardContent: {
+    padding: 0,
+  },
+  payNowButton: {
+    marginTop: 8,
+    backgroundColor: Colors.error,
+    borderRadius: Layout.borderRadius.small,
   },
 }); 

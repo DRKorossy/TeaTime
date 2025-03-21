@@ -27,18 +27,57 @@ function RootLayoutNav() {
     if (!initialized) return;
 
     // Bypass authentication and always go to main app
-    if (!session && segments[0] !== '(tabs)') {
+    if (!session && segments[0] !== '(tabs)' && 
+        segments[0] !== '(modals)' && 
+        !segments[0]?.includes('payment')) {
       router.replace('/(tabs)');
     }
   }, [session, initialized, segments]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          // Proper modal handling
+          presentation: segments[0] === '(modals)' ? 'modal' : 'card',
+          // Force animation to slide from bottom for modals
+          animation: segments[0] === '(modals)' ? 'slide_from_bottom' : 'default',
+        }}
+      >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
         <Stack.Screen name="auth" options={{ headerShown: false }} />
-        <Stack.Screen name="(modals)" options={{ headerShown: false }} />
+        
+        {/* Define modal screens here */}
+        <Stack.Screen 
+          name="(modals)" 
+          options={{ 
+            headerShown: false,
+            presentation: 'modal',
+          }} 
+        />
+        
+        {/* Also define direct access to modal screens */}
+        <Stack.Screen 
+          name="fine-payment" 
+          options={{ 
+            headerShown: true,
+            presentation: 'modal',
+            title: "Fine Payment",
+            headerTitleAlign: "center",
+          }} 
+        />
+        
+        <Stack.Screen 
+          name="donation-payment" 
+          options={{ 
+            headerShown: true,
+            presentation: 'modal',
+            title: "Charity Donation",
+            headerTitleAlign: "center",
+          }} 
+        />
       </Stack>
     </ThemeProvider>
   );

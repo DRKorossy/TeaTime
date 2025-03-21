@@ -54,4 +54,3 @@ export const theme = {
     scale: 1.0,
   },
 }; 
-}; 
