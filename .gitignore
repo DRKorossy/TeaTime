@@ -44,3 +44,5 @@ ios/
 android/
 supabase.ts
 
+# add supabase.tsx file to the gitignor, whereever it may be in the directory
+supabase.tsx
