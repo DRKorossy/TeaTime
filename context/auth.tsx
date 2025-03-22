@@ -100,14 +100,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: { message: 'Username is already taken' } };
       }
       
-      // Create the user account
+      // Create the user account - the database trigger will handle creating profiles and users
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             username,
-            name,
+            full_name: name,
           },
         },
       });
@@ -117,28 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
-      // After signup, create a profile entry
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: data.user.id,
-              username,
-              name,
-              email,
-              avatar_url: null,
-              bio: '',
-              location: '',
-              favorite_tea: 'Earl Grey',
-            },
-          ]);
-
-        if (profileError) {
-          setErrorMessage(profileError.message);
-          return { error: profileError };
-        }
-      }
+      // No need to manually create users and profiles records anymore
+      // The database trigger will handle this automatically
 
       return { data };
     } catch (error: any) {

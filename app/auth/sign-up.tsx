@@ -66,9 +66,18 @@ export default function SignUpScreen() {
   const handleSignUp = async () => {
     if (!validateForm()) return;
     
-    const { error } = await signUp(email, password, username, name);
+    const { error, data } = await signUp(email, password, username, name);
     if (error) {
       setErrors({ form: errorMessage || 'Error creating account' });
+    } else {
+      // Registration successful, show success message and navigate to feed
+      console.log('User registered successfully:', data);
+      
+      // Short delay to ensure database trigger has time to complete
+      setTimeout(() => {
+        // Redirect to feed screen
+        router.replace('/(tabs)');
+      }, 500);
     }
   };
 

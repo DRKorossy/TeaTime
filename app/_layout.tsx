@@ -26,10 +26,15 @@ function RootLayoutNav() {
   useEffect(() => {
     if (!initialized) return;
 
-    // Bypass authentication and always go to main app
-    if (!session && segments[0] !== '(tabs)' && 
-        segments[0] !== '(modals)' && 
-        !segments[0]?.includes('payment')) {
+    // Check if user is authenticated
+    const inAuthGroup = segments[0] === 'auth';
+    const inWelcomeScreen = segments[0] === 'welcome';
+    
+    if (!session && !inAuthGroup && !inWelcomeScreen) {
+      // Redirect to welcome screen if not authenticated
+      router.replace('/welcome');
+    } else if (session && (inAuthGroup || inWelcomeScreen)) {
+      // Redirect to main app if authenticated but on auth screens
       router.replace('/(tabs)');
     }
   }, [session, initialized, segments]);

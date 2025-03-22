@@ -42,4 +42,5 @@ app-example
 *.log
 ios/
 android/
+supabase.ts
 
